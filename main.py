@@ -5,6 +5,7 @@ from fastapi import FastAPI, Body, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Annotated
 from fastapi.middleware.cors import CORSMiddleware
+import json
 
 app = FastAPI()
 
@@ -103,37 +104,64 @@ async def jacobi_iteration(bodyValues: BodyType):
     return {"results": results}
 
 
+class MullerBodyType(BaseModel):
+    equation: str
+    x0: float
+    x1: float
+    x2: float
+    maxIterations: int
+    maxError: float
 
-# variables = ["x","y"]
-# eqns = [{"eqn": "x**2 + x*y - 10", "x": "2*x + y", "y": "x"}, {"eqn": "y + 3*x*y**2 - 57", "x": "3*y**2", "y": "1 + 6*x*y"}]
-# initialValue = {
-#   "x": 1.5,
-#   "y": 3.5
-# }
+@app.post("/roots-of-polynomials/muller")
+async def muller_method(bodyValues: MullerBodyType):
+    results = []
+    divergenceCount = 0
+    fx = sympify(bodyValues.equation)
 
-# jacobiArray = [[sympify(item[v]) for v in variables] for item in eqns]
-# fArray = [sympify(item["eqn"]) for item in eqns]
-# prevValues = np.array([initialValue[key] for key in initialValue])
+    i = 0
+    initialGuesses = [bodyValues.x0, bodyValues.x1, bodyValues.x2]
 
+    while i < bodyValues.maxIterations:  # Perform 4 iterations (as per the original code)
+        points = [fx.subs("x", value) for value in initialGuesses]
 
-# for i in range(4):
-#   jacobian = np.array([[float(item.evalf(subs={key: prevValues[ind] for ind, key in enumerate(variables)})) for item in row] for row in jacobiArray])
-#   f = np.array([float(item.evalf(subs={key: prevValues[ind] for ind, key in enumerate(variables)}) * -1) for item in fArray]).T
-
-#   delta = np.linalg.inv(jacobian).dot(f)
-#   values = delta + prevValues
-
-#   prevValues = values.copy()
-
-#   print(i, ">>>>>>>>>")
-#   print(jacobian)
-#   print(f)
-#   print(delta)
-#   print(values)
-#   print()
-  
+        h0 = initialGuesses[1] - initialGuesses[0]
+        h1 = initialGuesses[2] - initialGuesses[1]
+        d0 = (points[1] - points[0]) / (initialGuesses[1] - initialGuesses[0])
+        d1 = (points[2] - points[1]) / (initialGuesses[2] - initialGuesses[1])
 
 
+        a = (d1 - d0) / (h1 + h0)
+        b = a*h1 + d1
+        c = points[2]
 
-# for i in range(1):
+        discriminant = sqrt(b**2 - 4*a*c)
+        denominator = b - discriminant if b < 0 else b + discriminant
+        x32 = (-2*c)/ denominator
+        x3 = initialGuesses[2] + x32
+        ea = abs((x32 / x3) * 100)
 
+        result = {
+            "iteration": i+1,
+            "x0": initialGuesses[0],
+            "x1": initialGuesses[1],
+            "x2": initialGuesses[2],
+            "xr": x3,
+            "ea": ea
+        }
+        results.append(result)
+        print(result, i)
+
+        initialGuesses=[initialGuesses[1], initialGuesses[2], x3]
+
+        # if (i > 0 and ea > results[i]["ea"]):
+        #     divergenceCount += 1
+
+        i+=1
+
+        if ea < bodyValues.maxError or divergenceCount > 2:
+            break
+    res = {"results": results, "diverge": true if divergenceCount > 2 else false}
+    jres = json.dumps(res)
+    print(jres)
+    # return {"results": results, "diverge": true if divergenceCount > 2 else false}
+    return jres
