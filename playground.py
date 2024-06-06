@@ -1,9 +1,9 @@
-from sympy import *
+import sympy as sp
 
 
 def muller_algorithm(equation: str, x0: float, x1: float, x2: float, variable: str = "x"):
   results = []
-  fx = sympify(equation)
+  fx = sp.sympify(equation)
 
   i = 0
   initialGuesses = [x0, x1, x2]
@@ -47,4 +47,26 @@ def muller_algorithm(equation: str, x0: float, x1: float, x2: float, variable: s
   return results
 
 
-print(muller_algorithm("x**3 - 13*x - 12", 4.5, 5.5, 5))
+
+
+def trapezoidal_rule(f: str, a: float, b: float, n: int):
+  fx = sp.sympify(f)
+  h = (b - a) / n
+  result = 0.5 * (fx.subs("x", a) + fx.subs("x", b))
+  for i in range(1, n):
+    x = a + i * h
+    result += fx.subs("x", x)
+  result *= h
+  return result
+
+
+print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 1))
+print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 2))
+print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 3))
+print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 4))
+print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 5))
+print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 6))
+print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 7))
+print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 8))
+print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 9))
+print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 10))

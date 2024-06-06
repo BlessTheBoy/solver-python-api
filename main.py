@@ -1,4 +1,5 @@
-from sympy import *
+from math import sqrt
+import sympy as sp
 import numpy as np
 
 from fastapi import FastAPI, Body, HTTPException
@@ -34,6 +35,15 @@ class BodyType(BaseModel):
     eqns: List[Dict[str, str]]
     initial_values: Dict[str, float]
     stopping_criteria: StoppingCriteria
+
+# Create a JSON Encoder class
+class json_serialize(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (np.integer, np.floating)):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
 # class Result(BaseModel):
 #             results: List[{
 #                  iteration: int,
@@ -54,14 +64,14 @@ def home():
 async def jacobi_iteration(bodyValues: BodyType):
     try:
         if bodyValues.auto_differentiate:
-            jacobi_array = [[diff(sympify(item["eqn"]), v) for v in bodyValues.variables] for item in bodyValues.eqns]
+            jacobi_array = [[sp.diff(sp.sympify(item["eqn"]), v) for v in bodyValues.variables] for item in bodyValues.eqns]
         else:
-            jacobi_array = [[sympify(item[v]) for v in bodyValues.variables] for item in bodyValues.eqns]
+            jacobi_array = [[sp.sympify(item[v]) for v in bodyValues.variables] for item in bodyValues.eqns]
         
         print(jacobi_array)
 
             
-        f_array = [sympify(item["eqn"]) for item in bodyValues.eqns]
+        f_array = [sp.sympify(item["eqn"]) for item in bodyValues.eqns]
     except:
         raise HTTPException(status_code=404, detail="Invalid Equation")
         
@@ -116,7 +126,7 @@ class MullerBodyType(BaseModel):
 async def muller_method(bodyValues: MullerBodyType):
     results = []
     divergenceCount = 0
-    fx = sympify(bodyValues.equation)
+    fx = sp.sympify(bodyValues.equation)
 
     i = 0
     initialGuesses = [bodyValues.x0, bodyValues.x1, bodyValues.x2]
@@ -137,16 +147,16 @@ async def muller_method(bodyValues: MullerBodyType):
         discriminant = sqrt(b**2 - 4*a*c)
         denominator = b - discriminant if b < 0 else b + discriminant
         x32 = (-2*c)/ denominator
-        x3 = initialGuesses[2] + x32
+        x3 = initialGuesses[2] + float(x32)
         ea = abs((x32 / x3) * 100)
 
         result = {
             "iteration": i+1,
-            "x0": initialGuesses[0],
-            "x1": initialGuesses[1],
-            "x2": initialGuesses[2],
-            "xr": x3,
-            "ea": ea
+            "x0": str(initialGuesses[0]),
+            "x1": str(initialGuesses[1]),
+            "x2": str(initialGuesses[2]),
+            "xr": str(x3),
+            "ea": str(ea)
         }
         results.append(result)
         print(result, i)
@@ -160,8 +170,35 @@ async def muller_method(bodyValues: MullerBodyType):
 
         if ea < bodyValues.maxError or divergenceCount > 2:
             break
-    res = {"results": results, "diverge": true if divergenceCount > 2 else false}
-    jres = json.dumps(res)
-    print(jres)
+    res = {"results": results, "diverge": True if divergenceCount > 2 else False}
+    # jres = json.dumps(res, default=str)
+    # print(jres)
     # return {"results": results, "diverge": true if divergenceCount > 2 else false}
-    return jres
+    return res
+
+
+
+
+class TrapezoidalBodyType(BaseModel):
+    dataType: str
+    equation: str
+    a: float
+    b: float
+    n: int
+
+@app.post("/newton-cotes/trapezoidal")
+async def trapezoidal_rule(bodyValues: TrapezoidalBodyType):
+    # dataType = bodyValues.dataType
+    equation = bodyValues.equation
+    a = bodyValues.a
+    b = bodyValues.b
+    n = bodyValues.n
+    fx = sp.sympify(equation)
+    h = (b - a) / n
+    result = 0.5 * (fx.subs("x", a) + fx.subs("x", b))
+    for i in range(1, n):
+        x = a + i * h
+        result += fx.subs("x", x)
+        print("result", result)
+    result *= h
+    return float(result)
