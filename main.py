@@ -448,3 +448,36 @@ async def heun_method(bodyValues: eulerBodyType):
     return results
 
 
+@app.post("/ode/midpoint")
+async def midpoint_euler(bodyValues: eulerBodyType):
+    equation = bodyValues.equation
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    y1 = bodyValues.y1
+    h = bodyValues.h
+    fx = sp.sympify(equation)
+    n = int((x2 - x1) / h)
+    x = x1
+    y = y1
+    f = fx.subs("x", x).subs("y", y)
+    yi1 = y + (h/2) * f
+    corrector = fx.subs("x", x+h/2).subs("y", yi1)
+    results = [{"iteration": 0, "x": float(x), "y": float(y), "d": float(corrector)}]
+    for i in range(n):
+        yi = y + corrector * h
+        xi = x + h
+        f = fx.subs("x", xi).subs("y", yi)
+        yi1 = yi + (h/2) * f
+        corrector = fx.subs("x", xi+h/2).subs("y", yi1)
+        result = {
+            "iteration": i+1,
+            "x": float(xi),
+            "y": float(yi),
+            "d": float(corrector)
+        }
+        results.append(result)
+        x = xi
+        y = yi
+    return results
+
+
