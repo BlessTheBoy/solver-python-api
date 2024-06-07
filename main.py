@@ -199,6 +199,117 @@ async def trapezoidal_rule(bodyValues: TrapezoidalBodyType):
     for i in range(1, n):
         x = a + i * h
         result += fx.subs("x", x)
-        print("result", result)
+        # print("result", result)
     result *= h
+    return float(result)
+
+
+
+@app.post("/newton-cotes/simpson1")
+async def simpson1_rule(bodyValues: TrapezoidalBodyType):
+    # dataType = bodyValues.dataType
+    equation = bodyValues.equation
+    a = bodyValues.a
+    b = bodyValues.b
+    n = bodyValues.n
+    fx = sp.sympify(equation)
+    h = (b - a) / n
+    result = (fx.subs("x", a) + fx.subs("x", b))
+    for i in range(1, n, 2):
+        x = a + i * h
+        result += (4 * fx.subs("x", x))
+    for i in range(2, n, 2):
+        x = a + i * h
+        result += (2 * fx.subs("x", x))
+    result *= (h/3)
+    return float(result)
+
+
+@app.post("/newton-cotes/simpson3")
+async def simpson3_rule(bodyValues: TrapezoidalBodyType):
+    # dataType = bodyValues.dataType
+    equation = bodyValues.equation
+    a = bodyValues.a
+    b = bodyValues.b
+    n = bodyValues.n
+    fx = sp.sympify(equation)
+    h = (b - a) / n
+    result = (fx.subs("x", a) + fx.subs("x", b))
+    for i in range(1, n):
+        x = a + i * h
+        if i%3 == 0 :
+            result += (2 * fx.subs("x", x))
+        else: 
+            result += (3 * fx.subs("x", x))
+    result *= (h*(3/8))
+    return float(result)
+
+
+@app.post("/newton-cotes/boole")
+async def boole(bodyValues: TrapezoidalBodyType):
+    # dataType = bodyValues.dataType
+    equation = bodyValues.equation
+    a = bodyValues.a
+    b = bodyValues.b
+    n = bodyValues.n
+    fx = sp.sympify(equation)
+    h = (b - a) / n
+    result = 7 * (fx.subs("x", a) + fx.subs("x", b))
+    for i in range(1, n):
+        x = a + i * h
+        if i%4 == 0 :
+            result += (14 * fx.subs("x", x))
+        elif i%2 == 0:
+            result += (12 * fx.subs("x", x))
+        else: 
+            result += (32 * fx.subs("x", x))
+    result *= (h*(4/90))
+    return float(result)
+
+
+
+
+class HadfBodyType(BaseModel):
+    dataType: str
+    equation: str
+    order: int
+    type: str
+    x: float
+    h: float
+
+@app.post("/differentiation/hadf")
+async def high_accuracy_differential_formula(bodyValues: HadfBodyType):
+    equation = bodyValues.equation
+    order = bodyValues.order
+    type = bodyValues.type
+    x = bodyValues.x
+    h = bodyValues.h
+    fx = sp.sympify(equation)
+    if type == "forward":
+        if order == 1:
+            result = (-3*fx.subs("x", x) + 4*fx.subs("x", x+h) - fx.subs("x", x+2*h)) / (2*h)
+        elif order == 2:
+            result = (2*fx.subs("x", x) - 5*fx.subs("x", x+h) + 4*fx.subs("x", x+2*h) - fx.subs("x", x+3*h)) / (h**2)
+        elif order == 3:
+            result = (-11*fx.subs("x", x) + 18*fx.subs("x", x+h) - 9*fx.subs("x", x+2*h) + 2*fx.subs("x", x+3*h)) / (6*h)
+        elif order == 4:
+            result = (2*fx.subs("x", x) - 5*fx.subs("x", x+h) + 4*fx.subs("x", x+2*h) - fx.subs("x", x+3*h)) / (h**3)
+    elif type == "backward":
+        if order == 1:
+            result = (3*fx.subs("x", x) - 4*fx.subs("x", x-h) + fx.subs("x", x-2*h)) / (2*h)
+        elif order == 2:
+            result = (fx.subs("x", x) - 2*fx.subs("x", x-h) + fx.subs("x", x-2*h)) / (h**2)
+        elif order == 3:
+            result = (11*fx.subs("x", x) - 18*fx.subs("x", x-h) + 9*fx.subs("x", x-2*h) - 2*fx.subs("x", x-3*h)) / (6*h)
+        elif order == 4:
+            result = (2*fx.subs("x", x) - 5*fx.subs("x", x-h) + 4*fx.subs("x", x-2*h) - fx.subs("x", x-3*h)) / (h**3)
+    elif type == "central":
+        if order == 1:
+            result = (fx.subs("x", x+h) - fx.subs("x", x-h)) / (2*h)
+        elif order == 2:
+            result = (fx.subs("x", x+h) - 2*fx.subs("x", x) + fx.subs("x", x-h)) / (h**2)
+        elif order == 3:
+            result = (fx.subs("x", x+2*h) - 2*fx.subs("x", x+h) + 2*fx.subs("x", x-h) - fx.subs("x", x-2*h)) / (2*h**3)
+        elif order == 4:
+            result = (fx.subs("x", x+2*h) - 4*fx.subs("x", x+h) + 6*fx.subs("x", x) - 4*fx.subs("x", x-h) + fx.subs("x", x-2*h)) / (h**4)
     return float(result)
