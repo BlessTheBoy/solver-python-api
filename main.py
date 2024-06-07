@@ -414,3 +414,37 @@ async def euler_method(bodyValues: eulerBodyType):
         y = yi
     return results
 
+
+@app.post("/ode/heun")
+async def heun_method(bodyValues: eulerBodyType):
+    equation = bodyValues.equation
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    y1 = bodyValues.y1
+    h = bodyValues.h
+    fx = sp.sympify(equation)
+    n = int((x2 - x1) / h)
+    x = x1
+    y = y1
+    f = fx.subs("x", x).subs("y", y)
+    results = [{"iteration": 0, "x": float(x), "y": float(y)}]
+    for i in range(n):
+        yi1 = fx.subs("x", x+h).subs("y", y+h*f)
+        corrector = 0.5 * (f + yi1)
+        yi = y + corrector * h
+        xi = x + h
+        result = {
+            "iteration": i+1,
+            "x": float(xi),
+            "y": float(yi),
+            "yi": float(f),
+            "yi1": float(yi1),
+            "d": float(corrector)
+        }
+        results.append(result)
+        f = fx.subs("x", xi).subs("y", yi)
+        x = xi
+        y = yi
+    return results
+
+
