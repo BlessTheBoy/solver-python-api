@@ -377,3 +377,40 @@ async def richardson_extrapolation(bodyValues: RichardsonBodyType):
     result = (4/3 * D2) - (1/3 * D1)
     return {"D": float(result), "D1": float(D1), "D2": float(D2)}
 
+
+
+class eulerBodyType(BaseModel):
+    equation: str
+    x1: float
+    x2: float
+    y1: float
+    h: float
+
+@app.post("/ode/euler")
+async def euler_method(bodyValues: eulerBodyType):
+    equation = bodyValues.equation
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    y1 = bodyValues.y1
+    h = bodyValues.h
+    fx = sp.sympify(equation)
+    n = int((x2 - x1) / h)
+    x = x1
+    y = y1
+    f = fx.subs("x", x).subs("y", y)
+    results = [{"iteration": 0, "x": float(x), "y": float(y), "d": float(f)}]
+    for i in range(n):
+        yi = y + h * f
+        xi = x + h
+        f = fx.subs("x", xi).subs("y", yi)
+        result = {
+            "iteration": i+1,
+            "x": float(xi),
+            "y": float(yi),
+            "d": float(f)
+        }
+        results.append(result)
+        x = xi
+        y = yi
+    return results
+
