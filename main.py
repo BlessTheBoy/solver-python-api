@@ -313,3 +313,67 @@ async def high_accuracy_differential_formula(bodyValues: HadfBodyType):
         elif order == 4:
             result = (fx.subs("x", x+2*h) - 4*fx.subs("x", x+h) + 6*fx.subs("x", x) - 4*fx.subs("x", x-h) + fx.subs("x", x-2*h)) / (h**4)
     return float(result)
+
+
+
+
+class RichardsonBodyType(BaseModel):
+    dataType: str
+    equation: str
+    order: int
+    type: str
+    x: float
+    h1: float
+    h2: float
+
+@app.post("/differentiation/richardson")
+async def richardson_extrapolation(bodyValues: RichardsonBodyType):
+    equation = bodyValues.equation
+    order = bodyValues.order
+    type = bodyValues.type
+    x = bodyValues.x
+    h1 = bodyValues.h1
+    h2 = bodyValues.h2
+    fx = sp.sympify(equation)
+    if type == "forward":
+        if order == 1:
+            D1 = (fx.subs("x", x+h1) - fx.subs("x", x)) / h1
+            D2 = (fx.subs("x", x+h2) - fx.subs("x", x)) / h2
+        elif order == 2:
+            D1 = (fx.subs("x", x+h1) - 2*fx.subs("x", x) + fx.subs("x", x-h1)) / h1**2
+            D2 = (fx.subs("x", x+h2) - 2*fx.subs("x", x) + fx.subs("x", x-h2)) / h2**2
+        elif order == 3:
+            D1 = (fx.subs("x", x+2*h1) - 2*fx.subs("x", x+h1) + 2*fx.subs("x", x-h1) - fx.subs("x", x-2*h1)) / (2*h1**3)
+            D2 = (fx.subs("x", x+2*h2) - 2*fx.subs("x", x+h2) + 2*fx.subs("x", x-h2) - fx.subs("x", x-2*h2)) / (2*h2**3)
+        elif order == 4:
+            D1 = (fx.subs("x", x+2*h1) - 4*fx.subs("x", x+h1) + 6*fx.subs("x", x) - 4*fx.subs("x", x-h1) + fx.subs("x", x-2*h1)) / h1**4
+            D2 = (fx.subs("x", x+2*h2) - 4*fx.subs("x", x+h2) + 6*fx.subs("x", x) - 4*fx.subs("x", x-h2) + fx.subs("x", x-2*h2)) / h2**4
+    elif type == "backward":
+        if order == 1:
+            D1 = (fx.subs("x", x) - fx.subs("x", x-h1)) / h1
+            D2 = (fx.subs("x", x) - fx.subs("x", x-h2)) / h2
+        elif order == 2:
+            D1 = (fx.subs("x", x) - 2*fx.subs("x", x) + fx.subs("x", x-h1)) / h1**2
+            D2 = (fx.subs("x", x) - 2*fx.subs("x", x) + fx.subs("x", x-h2)) / h2**2
+        elif order == 3:
+            D1 = (fx.subs("x", x+2*h1) - 2*fx.subs("x", x+h1) + 2*fx.subs("x", x-h1) - fx.subs("x", x-2*h1)) / (2*h1**3)
+            D2 = (fx.subs("x", x+2*h2) - 2*fx.subs("x", x+h2) + 2*fx.subs("x", x-h2) - fx.subs("x", x-2*h2)) / (2*h2**3)
+        elif order == 4:
+            D1 = (fx.subs("x", x+2*h1) - 4*fx.subs("x", x+h1) + 6*fx.subs("x", x) - 4*fx.subs("x", x-h1) + fx.subs("x", x-2*h1)) / h1**4
+            D2 = (fx.subs("x", x+2*h2) - 4*fx.subs("x", x+h2) + 6*fx.subs("x", x) - 4*fx.subs("x", x-h2) + fx.subs("x", x-2*h2)) / h2**4
+    elif type == "central":
+        if order == 1:
+            D1 = (fx.subs("x", x+h1) - fx.subs("x", x-h1)) / (2*h1)
+            D2 = (fx.subs("x", x+h2) - fx.subs("x", x-h2)) / (2*h2)
+        elif order == 2:
+            D1 = (fx.subs("x", x+h1) - 2*fx.subs("x", x) + fx.subs("x", x-h1)) / h1**2
+            D2 = (fx.subs("x", x+h2) - 2*fx.subs("x", x) + fx.subs("x", x-h2)) / h2**2
+        elif order == 3:
+            D1 = (fx.subs("x", x+2*h1) - 2*fx.subs("x", x+h1) + 2*fx.subs("x", x-h1) - fx.subs("x", x-2*h1)) / (2*h1**3)
+            D2 = (fx.subs("x", x+2*h2) - 2*fx.subs("x", x+h2) + 2*fx.subs("x", x-h2) - fx.subs("x", x-2*h2)) / (2*h2**3)
+        elif order == 4:
+            D1 = (fx.subs("x", x+2*h1) - 4*fx.subs("x", x+h1) + 6*fx.subs("x", x) - 4*fx.subs("x", x-h1) + fx.subs("x", x-2*h1)) / h1**4
+            D2 = (fx.subs("x", x+2*h2) - 4*fx.subs("x", x+h2) + 6*fx.subs("x", x) - 4*fx.subs("x", x-h2) + fx.subs("x", x-2*h2)) / h2**4
+    result = (4/3 * D2) - (1/3 * D1)
+    return {"D": float(result), "D1": float(D1), "D2": float(D2)}
+
