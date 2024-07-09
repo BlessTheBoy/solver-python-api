@@ -481,3 +481,35 @@ async def midpoint_euler(bodyValues: eulerBodyType):
     return results
 
 
+@app.post("/ode/ralston")
+async def rk_ralston(bodyValues: eulerBodyType):
+    equation = bodyValues.equation
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    y1 = bodyValues.y1
+    h = bodyValues.h
+    fx = sp.sympify(equation)
+    n = int((x2 - x1) / h)
+    x = x1
+    y = y1
+    f = fx.subs("x", x).subs("y", y)
+    results = [{"iteration": 0, "x": float(x), "y": float(y)}]
+    for i in range(n):
+        k1 = f
+        k2 = fx.subs("x", x + (3/4)*h).subs("y", y + (3/4)*k1*h)
+        y = y + (1/3)*k1*h + (2/3)*k2*h
+        x = x + h
+        f = fx.subs("x", x).subs("y", y)
+        result = {
+            "iteration": i+1,
+            "x": float(x),
+            "y": float(y),
+            "k1": float(k1),
+            "k2": float(k2),
+        }
+        results.append(result)
+    return results
+    
+
+
+

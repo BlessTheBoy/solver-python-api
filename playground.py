@@ -51,24 +51,34 @@ def muller_algorithm(equation: str, x0: float, x1: float, x2: float, variable: s
 
 def trapezoidal_rule(f: str, a: float, b: float, n: int):
   fx = sp.sympify(f)
+  # fx = exp(x*tan(4*x))
   h = (b - a) / n
-  result = (fx.subs("x", a) + fx.subs("x", b))
+  result = 0.5 * (fx.subs("x", a).evalf() + fx.subs("x", b).evalf())
   for i in range(1, n):
       x = a + i * h
-      if i%3 == 0 :
-          result += (2 * fx.subs("x", x))
-      else: 
-          result += (3 * fx.subs("x", x))
-  result *= (h*(3/8))
+      result += fx.subs("x", x).evalf()
+      # print("result", result)
+  result *= h
   return result
 
 
-
+# fx = sp.sympify("exp(x*tan(4*x))")
+# print("fx", fx.subs("x", 2).evalf())
 
 
 # print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 1))
 # print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 2))
-print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 3))
+# print(trapezoidal_rule("exp(x*tan(4*x))", 1, 2, 10))
+print("10 => ", trapezoidal_rule("exp(x*tan(4*x))", 1, 2, 10))
+print("20 => ", trapezoidal_rule("exp(x*tan(4*x))", 1, 2, 20))
+print("100 => ", trapezoidal_rule("exp(x*tan(4*x))", 1, 2, 100))
+print("1000 => ", trapezoidal_rule("exp(x*tan(4*x))", 1, 2, 1000))
+print("3000 => ", trapezoidal_rule("exp(x*tan(4*x))", 1, 2, 3000))
+print("4000 => ", trapezoidal_rule("exp(x*tan(4*x))", 1, 2, 4000))
+print("5000 => ", trapezoidal_rule("exp(x*tan(4*x))", 1, 2, 5000))
+print("5000 => ", trapezoidal_rule("exp(x*tan(4*x))", 1, 2, 6000))
+print("5000 => ", trapezoidal_rule("exp(x*tan(4*x))", 1, 2, 7000))
+# print(trapezoidal_rule("exp(x*tan(4*x))", 1, 2, 100))
 # print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 4))
 # print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 5))
 # print(trapezoidal_rule("0.2 + 25*x + - 200*x**2 + 675 * x**3 - 900 * x**4 + 400 * x**5", 0, 0.8, 6))
