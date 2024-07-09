@@ -511,5 +511,72 @@ async def rk_ralston(bodyValues: eulerBodyType):
     return results
     
 
+@app.post("/ode/rk3")
+async def rk_3(bodyValues: eulerBodyType):
+    equation = bodyValues.equation
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    y1 = bodyValues.y1
+    h = bodyValues.h
+    fx = sp.sympify(equation)
+    n = int((x2 - x1) / h)
+    x = x1
+    y = y1
+    f = fx.subs("x", x).subs("y", y)
+    results = [{"iteration": 0, "x": float(x), "y": float(y)}]
+    for i in range(n):
+        k1 = f
+        k2 = fx.subs("x", x + (1/2)*h).subs("y", y + (1/2)*k1*h)
+        k3 = fx.subs("x", x + h).subs("y", y - k1*h + 2*k2*h)
+        y = y + (1/6)*h*(k1 + 4*k2 + k3)
+        x = x + h
+        f = fx.subs("x", x).subs("y", y)
+        result = {
+            "iteration": i+1,
+            "x": float(x),
+            "y": float(y),
+            "k1": float(k1),
+            "k2": float(k2),
+            "k3": float(k3),
+        }
+        results.append(result)
+    return results
+    
+
+
+@app.post("/ode/rk4")
+async def rk_4(bodyValues: eulerBodyType):
+    equation = bodyValues.equation
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    y1 = bodyValues.y1
+    h = bodyValues.h
+    fx = sp.sympify(equation)
+    n = int((x2 - x1) / h)
+    x = x1
+    y = y1
+    f = fx.subs("x", x).subs("y", y)
+    results = [{"iteration": 0, "x": float(x), "y": float(y)}]
+    for i in range(n):
+        k1 = f
+        k2 = fx.subs("x", x + (1/2)*h).subs("y", y + (1/2)*k1*h)
+        k3 = fx.subs("x", x + (1/2)*h).subs("y", y + (1/2)*k2*h)
+        k4 = fx.subs("x", x + h).subs("y", y + k3*h)
+        y = y + (1/6)*h*(k1 + 2*k2 + 2*k3 + k4)
+        x = x + h
+        f = fx.subs("x", x).subs("y", y)
+        result = {
+            "iteration": i+1,
+            "x": float(x),
+            "y": float(y),
+            "k1": float(k1),
+            "k2": float(k2),
+            "k3": float(k3),
+            "k4": float(k4),
+        }
+        results.append(result)
+    return results
+    
+
 
 
