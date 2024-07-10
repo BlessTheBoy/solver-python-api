@@ -385,6 +385,13 @@ class eulerBodyType(BaseModel):
     x2: float
     y1: float
     h: float
+    
+class odeSysBodyType(BaseModel):
+    equations: list[dict[str, str]]
+    initialValues: list[float]
+    x1: float
+    x2: float
+    h: float
 
 @app.post("/ode/euler")
 async def euler_method(bodyValues: eulerBodyType):
@@ -415,6 +422,46 @@ async def euler_method(bodyValues: eulerBodyType):
     return results
 
 
+def substitute_values(expression, values):
+    substituted_expression = expression
+    for i, value in enumerate(values):
+        substituted_expression = substituted_expression.subs(f"y{i+1}", value)
+    return substituted_expression
+
+
+@app.post("/sys-of-ode/euler")
+async def system_of_ode_euler_method(bodyValues: odeSysBodyType):
+    x, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, y26, y27, y28, y29, y30, y31, y32, y33, y34, y35, y36, y37, y38, y39, y40, y41, y42, y43, y44, y45, y46, y47, y48, y49, y50, y51, y52, y53, y54, y55, y56, y57, y58, y59, y60, y61, y62, y63, y64, y65, y66, y67, y68, y69, y70, y71, y72, y73, y74, y75, y76, y77, y78, y79, y80, y81, y82, y83, y84, y85, y86, y87, y88, y89, y90, y91, y92, y93, y94, y95, y96, y97, y98, y99, y100 = sp.symbols("x y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18 y19 y20 y21 y22 y23 y24 y25 y26 y27 y28 y29 y30 y31 y32 y33 y34 y35 y36 y37 y38 y39 y40 y41 y42 y43 y44 y45 y46 y47 y48 y49 y50 y51 y52 y53 y54 y55 y56 y57 y58 y59 y60 y61 y62 y63 y64 y65 y66 y67 y68 y69 y70 y71 y72 y73 y74 y75 y76 y77 y78 y79 y80 y81 y82 y83 y84 y85 y86 y87 y88 y89 y90 y91 y92 y93 y94 y95 y96 y97 y98 y99 y100")
+
+    equations = bodyValues.equations
+    initialValues = bodyValues.initialValues
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    h = bodyValues.h
+    fx = [sp.sympify(equation["equation"]) for equation in equations]
+    n = int((x2 - x1) / h)
+    x = x1
+    y = initialValues
+    f = [substitute_values(fx[i].subs("x", x), y) for i in range(len(y))]
+    # print("f = ", f)
+    results = [{"iteration": 0, "x": float(x), "y": [float(yi) for yi in y]}]
+    for i in range(n):
+        yi = [y[j] + h * f[j] for j in range(len(y))]
+        print("yi = ", yi)
+        xi = x + h
+        f = [substitute_values(fx[j].subs("x", xi), yi) for j in range(len(y))]
+        result = {
+            "iteration": i+1,
+            "x": float(xi),
+            "y": [float(yi[j]) for j in range(len(y))]
+        }
+        results.append(result)
+        x = xi
+        y = yi
+    return results
+    
+
+
 @app.post("/ode/heun")
 async def heun_method(bodyValues: eulerBodyType):
     equation = bodyValues.equation
@@ -443,6 +490,38 @@ async def heun_method(bodyValues: eulerBodyType):
         }
         results.append(result)
         f = fx.subs("x", xi).subs("y", yi)
+        x = xi
+        y = yi
+    return results
+
+
+@app.post("/sys-of-ode/heun")
+async def system_of_ode_heun_method(bodyValues: odeSysBodyType):
+    x, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, y26, y27, y28, y29, y30, y31, y32, y33, y34, y35, y36, y37, y38, y39, y40, y41, y42, y43, y44, y45, y46, y47, y48, y49, y50, y51, y52, y53, y54, y55, y56, y57, y58, y59, y60, y61, y62, y63, y64, y65, y66, y67, y68, y69, y70, y71, y72, y73, y74, y75, y76, y77, y78, y79, y80, y81, y82, y83, y84, y85, y86, y87, y88, y89, y90, y91, y92, y93, y94, y95, y96, y97, y98, y99, y100 = sp.symbols("x y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18 y19 y20 y21 y22 y23 y24 y25 y26 y27 y28 y29 y30 y31 y32 y33 y34 y35 y36 y37 y38 y39 y40 y41 y42 y43 y44 y45 y46 y47 y48 y49 y50 y51 y52 y53 y54 y55 y56 y57 y58 y59 y60 y61 y62 y63 y64 y65 y66 y67 y68 y69 y70 y71 y72 y73 y74 y75 y76 y77 y78 y79 y80 y81 y82 y83 y84 y85 y86 y87 y88 y89 y90 y91 y92 y93 y94 y95 y96 y97 y98 y99 y100")
+    equations = bodyValues.equations
+    initialValues = bodyValues.initialValues
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    h = bodyValues.h
+    fx = [sp.sympify(equation["equation"]) for equation in equations]
+    n = int((x2 - x1) / h)
+    x = x1
+    y = initialValues
+    f = [substitute_values(fx[i].subs("x", x), y) for i in range(len(y))]
+    # print("f = ", f)
+    results = [{"iteration": 0, "x": float(x), "y": [float(yi) for yi in y]}]
+    for i in range(n):
+        yi1 = [substitute_values(fx[j].subs("x", x+h), y) for j in range(len(y))]
+        corrector = [0.5 * (f[j] + yi1[j]) for j in range(len(y))]
+        yi = [y[j] + corrector[j] * h for j in range(len(y))]
+        xi = x + h
+        f = [substitute_values(fx[j].subs("x", xi), yi) for j in range(len(y))]
+        result = {
+            "iteration": i+1,
+            "x": float(xi),
+            "y": [float(yi[j]) for j in range(len(y))],
+        }
+        results.append(result)
         x = xi
         y = yi
     return results
@@ -480,6 +559,41 @@ async def midpoint_euler(bodyValues: eulerBodyType):
         y = yi
     return results
 
+@app.post("/sys-of-ode/midpoint")
+async def system_of_ode_midpoint_euler(bodyValues: odeSysBodyType):
+    x, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, y26, y27, y28, y29, y30, y31, y32, y33, y34, y35, y36, y37, y38, y39, y40, y41, y42, y43, y44, y45, y46, y47, y48, y49, y50, y51, y52, y53, y54, y55, y56, y57, y58, y59, y60, y61, y62, y63, y64, y65, y66, y67, y68, y69, y70, y71, y72, y73, y74, y75, y76, y77, y78, y79, y80, y81, y82, y83, y84, y85, y86, y87, y88, y89, y90, y91, y92, y93, y94, y95, y96, y97, y98, y99, y100 = sp.symbols("x y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18 y19 y20 y21 y22 y23 y24 y25 y26 y27 y28 y29 y30 y31 y32 y33 y34 y35 y36 y37 y38 y39 y40 y41 y42 y43 y44 y45 y46 y47 y48 y49 y50 y51 y52 y53 y54 y55 y56 y57 y58 y59 y60 y61 y62 y63 y64 y65 y66 y67 y68 y69 y70 y71 y72 y73 y74 y75 y76 y77 y78 y79 y80 y81 y82 y83 y84 y85 y86 y87 y88 y89 y90 y91 y92 y93 y94 y95 y96 y97 y98 y99 y100")
+    equations = bodyValues.equations
+    initialValues = bodyValues.initialValues
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    y1 = initialValues
+    h = bodyValues.h
+    fx = [sp.sympify(equation["equation"]) for equation in equations]
+    n = int((x2 - x1) / h)
+    x = x1
+    y = y1
+    f = [substitute_values(fx[i].subs("x", x), y) for i in range(len(y))]
+    yi1 = [y[j] + (h/2) * f[j] for j in range(len(y))]
+    corrector = [substitute_values(fx[i].subs("x", x+h/2), yi1) for i in range(len(y))]
+    results = [{"iteration": 0, "x": float(x), "y": float(y), "d": float(corrector)}]
+    for i in range(n):
+        yi = [y[j] + corrector[j] * h for j in range(len(y))]
+        xi = x + h
+        f = [substitute_values(fx[j].subs("x", xi), yi) for j in range(len(y))]
+        yi1 = [yi[j] + (h/2) * f[j] for j in range(len(y))]
+        corrector = [substitute_values(fx[i].subs("x", xi+h/2), yi1) for i in range(len(y))]
+        result = {
+            "iteration": i+1,
+            "x": float(xi),
+            "y": [float(yi[j]) for j in range(len(y))],
+        }
+        results.append(result)
+        x = xi
+        y = yi
+    return results
+    
+
+
 
 @app.post("/ode/ralston")
 async def rk_ralston(bodyValues: eulerBodyType):
@@ -509,6 +623,39 @@ async def rk_ralston(bodyValues: eulerBodyType):
         }
         results.append(result)
     return results
+
+
+@app.post("/sys-of-ode/ralston")
+async def system_of_ode_rk_ralston(bodyValues: odeSysBodyType):
+    x, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, y26, y27, y28, y29, y30, y31, y32, y33, y34, y35, y36, y37, y38, y39, y40, y41, y42, y43, y44, y45, y46, y47, y48, y49, y50, y51, y52, y53, y54, y55, y56, y57, y58, y59, y60, y61, y62, y63, y64, y65, y66, y67, y68, y69, y70, y71, y72, y73, y74, y75, y76, y77, y78, y79, y80, y81, y82, y83, y84, y85, y86, y87, y88, y89, y90, y91, y92, y93, y94, y95, y96, y97, y98, y99, y100 = sp.symbols("x y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18 y19 y20 y21 y22 y23 y24 y25 y26 y27 y28 y29 y30 y31 y32 y33 y34 y35 y36 y37 y38 y39 y40 y41 y42 y43 y44 y45 y46 y47 y48 y49 y50 y51 y52 y53 y54 y55 y56 y57 y58 y59 y60 y61 y62 y63 y64 y65 y66 y67 y68 y69 y70 y71 y72 y73 y74 y75 y76 y77 y78 y79 y80 y81 y82 y83 y84 y85 y86 y87 y88 y89 y90 y91 y92 y93 y94 y95 y96 y97 y98 y99 y100")
+    equations = bodyValues.equations
+    initialValues = bodyValues.initialValues
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    y1 = initialValues
+    h = bodyValues.h
+    fx = [sp.sympify(equation["equation"]) for equation in equations]
+    n = int((x2 - x1) / h)
+    x = x1
+    y = y1
+    f = [substitute_values(fx[i].subs("x", x), y) for i in range(len(y))]
+    results = [{"iteration": 0, "x": float(x), "y": [float(yi) for yi in y]}]
+    for i in range(n):
+        k1 = [f[j] for j in range(len(y))]
+        k2 = [substitute_values(fx[j].subs("x", x + (3/4)*h), [y[k] + (3/4)*k1[k]*h for k in range(len(y))]) for j in range(len(y))]
+        yi = [y[k] + (1/3)*k1[k]*h + (2/3)*k2[k]*h for k in range(len(y))]
+        xi = x + h
+        f = [substitute_values(fx[j].subs("x", xi), yi) for j in range(len(y))]
+        result = {
+            "iteration": i+1,
+            "x": float(xi),
+            "y": [float(yi[j]) for j in range(len(y))],
+        }
+        results.append(result)
+        x = xi
+        y = yi
+    return results
+
     
 
 @app.post("/ode/rk3")
@@ -540,6 +687,39 @@ async def rk_3(bodyValues: eulerBodyType):
             "k3": float(k3),
         }
         results.append(result)
+    return results
+    
+
+@app.post("/sys-of-ode/rk3")
+async def system_of_ode_rk_3(bodyValues: odeSysBodyType):
+    x, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, y26, y27, y28, y29, y30, y31, y32, y33, y34, y35, y36, y37, y38, y39, y40, y41, y42, y43, y44, y45, y46, y47, y48, y49, y50, y51, y52, y53, y54, y55, y56, y57, y58, y59, y60, y61, y62, y63, y64, y65, y66, y67, y68, y69, y70, y71, y72, y73, y74, y75, y76, y77, y78, y79, y80, y81, y82, y83, y84, y85, y86, y87, y88, y89, y90, y91, y92, y93, y94, y95, y96, y97, y98, y99, y100 = sp.symbols("x y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18 y19 y20 y21 y22 y23 y24 y25 y26 y27 y28 y29 y30 y31 y32 y33 y34 y35 y36 y37 y38 y39 y40 y41 y42 y43 y44 y45 y46 y47 y48 y49 y50 y51 y52 y53 y54 y55 y56 y57 y58 y59 y60 y61 y62 y63 y64 y65 y66 y67 y68 y69 y70 y71 y72 y73 y74 y75 y76 y77 y78 y79 y80 y81 y82 y83 y84 y85 y86 y87 y88 y89 y90 y91 y92 y93 y94 y95 y96 y97 y98 y99 y100")
+    equations = bodyValues.equations
+    initialValues = bodyValues.initialValues
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    y1 = initialValues
+    h = bodyValues.h
+    fx = [sp.sympify(equation["equation"]) for equation in equations]
+    n = int((x2 - x1) / h)
+    x = x1
+    y = y1
+    f = [substitute_values(fx[i].subs("x", x), y) for i in range(len(y))]
+    results = [{"iteration": 0, "x": float(x), "y": [float(yi) for yi in y]}]
+    for i in range(n):
+        k1 = [f[j] for j in range(len(y))]
+        k2 = [substitute_values(fx[j].subs("x", x + (1/2)*h), [y[k] + (1/2)*k1[k]*h for k in range(len(y))]) for j in range(len(y))]
+        k3 = [substitute_values(fx[j].subs("x", x + h), [y[k] - k1[k]*h + 2*k2[k]*h for k in range(len(y))]) for j in range(len(y))]
+        yi = [y[k] + (1/6)*h*(k1[k] + 4*k2[k] + k3[k]) for k in range(len(y))]
+        xi = x + h
+        f = [substitute_values(fx[j].subs("x", xi), yi) for j in range(len(y))]
+        result = {
+            "iteration": i+1,
+            "x": float(xi),
+            "y": [float(yi[j]) for j in range(len(y))],
+        }
+        results.append(result)
+        x = xi
+        y = yi
     return results
     
 
@@ -576,6 +756,115 @@ async def rk_4(bodyValues: eulerBodyType):
         }
         results.append(result)
     return results
+
+
+@app.post("/sys-of-ode/rk4")
+async def system_of_ode_rk_4(bodyValues: odeSysBodyType):
+    x, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, y26, y27, y28, y29, y30, y31, y32, y33, y34, y35, y36, y37, y38, y39, y40, y41, y42, y43, y44, y45, y46, y47, y48, y49, y50, y51, y52, y53, y54, y55, y56, y57, y58, y59, y60, y61, y62, y63, y64, y65, y66, y67, y68, y69, y70, y71, y72, y73, y74, y75, y76, y77, y78, y79, y80, y81, y82, y83, y84, y85, y86, y87, y88, y89, y90, y91, y92, y93, y94, y95, y96, y97, y98, y99, y100 = sp.symbols("x y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18 y19 y20 y21 y22 y23 y24 y25 y26 y27 y28 y29 y30 y31 y32 y33 y34 y35 y36 y37 y38 y39 y40 y41 y42 y43 y44 y45 y46 y47 y48 y49 y50 y51 y52 y53 y54 y55 y56 y57 y58 y59 y60 y61 y62 y63 y64 y65 y66 y67 y68 y69 y70 y71 y72 y73 y74 y75 y76 y77 y78 y79 y80 y81 y82 y83 y84 y85 y86 y87 y88 y89 y90 y91 y92 y93 y94 y95 y96 y97 y98 y99 y100")
+
+    equations = bodyValues.equations
+    initialValues = bodyValues.initialValues
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    h = bodyValues.h
+    fx = [sp.sympify(equation["equation"]) for equation in equations]
+    n = int((x2 - x1) / h)
+    x = x1
+    y = initialValues
+    f = [substitute_values(fx[i].subs("x", x), y) for i in range(len(y))]
+    # print("f = ", f)
+    results = [{"iteration": 0, "x": float(x), "y": [float(yi) for yi in y]}]
+    for i in range(n):
+        k1 = f
+        k2 = [substitute_values(fx[j].subs("x", x + (1/2)*h), [y[j] + (1/2)*k1[j]*h for j in range(len(y))]) for j in range(len(y))]
+        k3 = [substitute_values(fx[j].subs("x", x + (1/2)*h), [y[j] + (1/2)*k2[j]*h for j in range(len(y))]) for j in range(len(y))]
+        k4 = [substitute_values(fx[j].subs("x", x + h), [y[j] + k3[j]*h for j in range(len(y))]) for j in range(len(y))]
+        y = [y[j] + (1/6)*h*(k1[j] + 2*k2[j] + 2*k3[j] + k4[j]) for j in range(len(y))]
+        x = x + h
+        f = [substitute_values(fx[j].subs("x", x), y) for j in range(len(y))]
+        result = {
+            "iteration": i+1,
+            "x": float(x),
+            "y": [float(yi) for yi in y]
+        }
+        results.append(result)
+    return results
+    
+
+@app.post("/ode/rk5")
+async def rk5_butchers_method(bodyValues: eulerBodyType):
+    equation = bodyValues.equation
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    y1 = bodyValues.y1
+    h = bodyValues.h
+    fx = sp.sympify(equation)
+    n = int((x2 - x1) / h)
+    x = x1
+    y = y1
+    f = fx.subs("x", x).subs("y", y)
+    results = [{"iteration": 0, "x": float(x), "y": float(y)}]
+    for i in range(n):
+        k1 = f
+        k2 = fx.subs("x", x + (1/4)*h).subs("y", y + (1/4)*k1*h)
+        k3 = fx.subs("x", x + (1/4)*h).subs("y", y + (1/8)*k1*h + (1/8)*k2*h)
+        k4 = fx.subs("x", x + (1/2)*h).subs("y", y - (1/2)*k2*h + k3*h)
+        k5 = fx.subs("x", x + (3/4)*h).subs("y", y + (3/16)*k1*h + (9/16)*k4*h)
+        k6 = fx.subs("x", x + h).subs("y", y - (3/7)*k1*h + (2/7)*k2*h + (12/7)*k3*h - (12/7)*k4*h + (8/7)*k5*h)
+        y = y + (1/90)*h*(7*k1 + 32*k3 + 12*k4 + 32*k5 + 7*k6)
+        x = x + h
+        f = fx.subs("x", x).subs("y", y)
+        result = {
+            "iteration": i+1,
+            "x": float(x),
+            "y": float(y),
+            "k1": float(k1),
+            "k2": float(k2),
+            "k3": float(k3),
+            "k4": float(k4),
+            "k5": float(k5),
+            "k6": float(k6),
+        }
+        results.append(result)
+    return results
+
+    
+@app.post("/sys-of-ode/rk5")
+async def system_of_ode_rk5_butchers_method(bodyValues: odeSysBodyType):
+    x, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, y26, y27, y28, y29, y30, y31, y32, y33, y34, y35, y36, y37, y38, y39, y40, y41, y42, y43, y44, y45, y46, y47, y48, y49, y50, y51, y52, y53, y54, y55, y56, y57, y58, y59, y60, y61, y62, y63, y64, y65, y66, y67, y68, y69, y70, y71, y72, y73, y74, y75, y76, y77, y78, y79, y80, y81, y82, y83, y84, y85, y86, y87, y88, y89, y90, y91, y92, y93, y94, y95, y96, y97, y98, y99, y100 = sp.symbols("x y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18 y19 y20 y21 y22 y23 y24 y25 y26 y27 y28 y29 y30 y31 y32 y33 y34 y35 y36 y37 y38 y39 y40 y41 y42 y43 y44 y45 y46 y47 y48 y49 y50 y51 y52 y53 y54 y55 y56 y57 y58 y59 y60 y61 y62 y63 y64 y65 y66 y67 y68 y69 y70 y71 y72 y73 y74 y75 y76 y77 y78 y79 y80 y81 y82 y83 y84 y85 y86 y87 y88 y89 y90 y91 y92 y93 y94 y95 y96 y97 y98 y99 y100")
+    equations = bodyValues.equations
+    initialValues = bodyValues.initialValues
+    x1 = bodyValues.x1
+    x2 = bodyValues.x2
+    h = bodyValues.h
+    fx = [sp.sympify(equation["equation"]) for equation in equations]
+    n = int((x2 - x1) / h)
+    x = x1
+    y = initialValues
+    f = [substitute_values(fx[i].subs("x", x), y) for i in range(len(y))]
+    # print("f = ", f)
+    results = [{"iteration": 0, "x": float(x), "y": [float(yi) for yi in y]}]
+    for i in range(n):
+        k1 = [f[j] for j in range(len(y))]
+        k2 = [substitute_values(fx[j].subs("x", x + (1/4)*h), [y[j] + (1/4)*k1[j]*h for j in range(len(y))]) for j in range(len(y))]
+        k3 = [substitute_values(fx[j].subs("x", x + (1/4)*h), [y[j] + (1/8)*k1[j]*h + (1/8)*k2[j]*h for j in range(len(y))]) for j in range(len(y))]
+        k4 = [substitute_values(fx[j].subs("x", x + (1/2)*h), [y[j] - (1/2)*k2[j]*h + k3[j]*h for j in range(len(y))]) for j in range(len(y))]
+        k5 = [substitute_values(fx[j].subs("x", x + (3/4)*h), [y[j] + (3/16)*k1[j]*h + (9/16)*k4[j]*h for j in range(len(y))]) for j in range(len(y))]
+        k6 = [substitute_values(fx[j].subs("x", x + h), [y[j] - (3/7)*k1[j]*h + (2/7)*k2[j]*h + (12/7)*k3[j]*h - (12/7)*k4[j]*h + (8/7)*k5[j]*h for j in range(len(y))]) for j in range(len(y))]
+        yi = [y[j] + (1/90)*h*(7*k1[j] + 32*k3[j] + 12*k4[j] + 32*k5[j] + 7*k6[j]) for j in range(len(y))]
+        xi = x + h
+        f = [substitute_values(fx[j].subs("x", xi), yi) for j in range(len(y))]
+        result = {
+            "iteration": i+1,
+            "x": float(xi),
+            "y": [float(yi[j]) for j in range(len(y))],
+        }
+        results.append(result)
+        x = xi
+        y = yi
+    return results
+   
+
     
 
 
