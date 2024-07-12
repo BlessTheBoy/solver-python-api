@@ -393,6 +393,14 @@ class odeSysBodyType(BaseModel):
     x2: float
     h: float
 
+class bvpBodyType(BaseModel):
+    equation: str
+    x_0: float
+    x_L: float
+    y_0: float
+    y_L: float
+    h: float
+
 @app.post("/ode/euler")
 async def euler_method(bodyValues: eulerBodyType):
     equation = bodyValues.equation
@@ -731,11 +739,15 @@ async def rk_4(bodyValues: eulerBodyType):
     x2 = bodyValues.x2
     y1 = bodyValues.y1
     h = bodyValues.h
+    print("===========> 1")
     fx = sp.sympify(equation)
+    print("===========> 2")
     n = int((x2 - x1) / h)
+    print("===========> 3")
     x = x1
     y = y1
     f = fx.subs("x", x).subs("y", y)
+    print("===========> 4")
     results = [{"iteration": 0, "x": float(x), "y": float(y)}]
     for i in range(n):
         k1 = f
@@ -743,6 +755,7 @@ async def rk_4(bodyValues: eulerBodyType):
         k3 = fx.subs("x", x + (1/2)*h).subs("y", y + (1/2)*k2*h)
         k4 = fx.subs("x", x + h).subs("y", y + k3*h)
         y = y + (1/6)*h*(k1 + 2*k2 + 2*k3 + k4)
+        print("===========> 5")
         x = x + h
         f = fx.subs("x", x).subs("y", y)
         result = {
@@ -866,6 +879,80 @@ async def system_of_ode_rk5_butchers_method(bodyValues: odeSysBodyType):
    
 
     
+@app.post("/bvp/finite-difference")
+async def solve_differential_equation(bodyValues: bvpBodyType):
+    equation = bodyValues.equation
+    x_0 = bodyValues.x_0
+    x_L = bodyValues.x_L
+    y_0 = bodyValues.y_0
+    y_L = bodyValues.y_L
+    h = bodyValues.h
+
+
+    L= x_L - x_0
+    n=int(L/h)
+
+    x, y, p, q, r = sp.symbols("x y p q r")
+    expr = sp.sympify(equation)
+    # l=5
+    # y0 = 40
+    # y5 = 200
+
+    # discretize the equation
+    fir = sp.sympify("(p + r)/2*h")
+    sec = sp.sympify("(p -2*q + r)/h**2")
+    disc = expr.subs([("y1", fir), ("y2", sec), ("y", q), ("h", h), ("x", x)])
+
+    # print(disc) 
+    normalized_const = 1 / min(sp.diff(disc, p), sp.diff(disc, r))
+    const_fact = (disc.subs([(p, 0), (q, 0), (r, 0)]) + sp.diff(disc, x)) * normalized_const
+    disc_eqn = str(sp.simplify(disc * normalized_const).evalf() - const_fact) + " = " + str(-const_fact)
+    print(disc_eqn)
+
+
+    # Iterate through the equation to create the system of equations
+    equations = []
+    for i in range(1, n):
+        y1 = sp.symbols(f"y{i-1}")
+        y2 = sp.symbols(f"y{i}")
+        y3 = sp.symbols(f"y{i+1}")
+        equation_discretized = disc.subs([(p, y1), (q, y2), (r, y3), (x, x_0 + (i-1)*h)]).subs("y0", y_0).subs(f"y{n}", y_L)
+        # print(equation_discretized)
+        equations.append(equation_discretized * normalized_const)
+
+    # Convert the system of equations to matrix form
+    matrix = sp.zeros(n-1)
+    for i, eq in enumerate(equations):
+        for j, var in enumerate(eq.free_symbols):
+            index = int(var.name[1:]) - 1
+            matrix[i, index] = sp.diff(eq, var)
+
+
+    constant_matrix = sp.zeros(n-1, 1)
+    for i in range(n-1):
+        v = disc
+        if i == 0:
+            v = disc.subs(p, y_0)
+        elif i == n-2:
+            v = disc.subs(r, y_L)
+        constant_matrix[i, 0] = -normalized_const * v.subs([(p, 0), (q, 0), (r, 0), (x, x_0 + i*h)])
+
+    # print(matrix * normalized_const)
+    # print(constant_matrix * normalized_const)
+
+    sol = np.linalg.solve(np.array(matrix, dtype=np.float64), np.array(constant_matrix, dtype=np.float64))
+
+    print(sol)
+
+    results = {
+        "disc_eqn": str(disc_eqn),
+        "matrix": [[float(value) for value in row] for row in matrix.tolist()],
+        "constant_matrix": [[float(value) for value in row] for row in constant_matrix.tolist()],
+        "solution": [[float(value) for value in row] for row in sol.tolist()]
+    }
+    
+    return results
+
 
 
 
