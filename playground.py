@@ -165,4 +165,45 @@ def solve_differential_equation(equation: str, y_0: float, y_L: float, x_0: floa
 
 
 
-solve_differential_equation("y2 + 0.01*(20-y)", 40, 200, 0, 10, 2)
+# solve_differential_equation("y2 + 0.01*(20-y)", 40, 200, 0, 10, 2)
+
+
+nx = 3
+ny = 3
+left = 75
+right = 50
+top = 100
+bottom = 0
+max_iterations = 9
+abs_max_error = 0.0001
+over_relaxation = 1.5
+
+matrix = [[top] * (ny+2)]
+for i in range(1, nx+1):
+    row = [left] + [0] * ny + [right]
+    matrix.append(row)
+matrix.append([bottom] * (ny+2))
+
+results = [matrix]
+
+# print(matrix)
+
+for iteration in range(max_iterations):
+  new_matrix = [row.copy() for row in matrix]
+  for i in range(1, nx+1):
+    for j in range(1, ny+1):
+      new_value = (1 - over_relaxation) * new_matrix[i][j] + over_relaxation * (new_matrix[i-1][j] + new_matrix[i+1][j] + new_matrix[i][j-1] + new_matrix[i][j+1]) / 4
+      new_matrix[i][j] = new_value
+  
+  max_error = max(abs((new_matrix[i][j] - matrix[i][j])/matrix[i][j]) * 100 if matrix[i][j] != 0 else 100 for i in range(1, nx+1) for j in range(1, ny+1))
+  matrix = new_matrix
+  results.append(matrix)
+  if max_error < abs_max_error:
+    break
+
+
+
+for matrix in results:
+  print(matrix)
+  
+# print(len(results)

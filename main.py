@@ -421,8 +421,8 @@ async def euler_method(bodyValues: eulerBodyType):
         result = {
             "iteration": i+1,
             "x": float(xi),
-            "y": float(yi),
-            "d": float(f)
+            "y": str(yi),
+            "d": str(f)
         }
         results.append(result)
         x = xi
@@ -461,7 +461,7 @@ async def system_of_ode_euler_method(bodyValues: odeSysBodyType):
         result = {
             "iteration": i+1,
             "x": float(xi),
-            "y": [float(yi[j]) for j in range(len(y))]
+            "y": [str(yi[j]) for j in range(len(y))]
         }
         results.append(result)
         x = xi
@@ -491,10 +491,10 @@ async def heun_method(bodyValues: eulerBodyType):
         result = {
             "iteration": i+1,
             "x": float(xi),
-            "y": float(yi),
-            "yi": float(f),
-            "yi1": float(yi1),
-            "d": float(corrector)
+            "y": str(yi),
+            "yi": str(f),
+            "yi1": str(yi1),
+            "d": str(corrector)
         }
         results.append(result)
         f = fx.subs("x", xi).subs("y", yi)
@@ -527,7 +527,7 @@ async def system_of_ode_heun_method(bodyValues: odeSysBodyType):
         result = {
             "iteration": i+1,
             "x": float(xi),
-            "y": [float(yi[j]) for j in range(len(y))],
+            "y": [str(yi[j]) for j in range(len(y))],
         }
         results.append(result)
         x = xi
@@ -559,8 +559,8 @@ async def midpoint_euler(bodyValues: eulerBodyType):
         result = {
             "iteration": i+1,
             "x": float(xi),
-            "y": float(yi),
-            "d": float(corrector)
+            "y": str(yi),
+            "d": str(corrector)
         }
         results.append(result)
         x = xi
@@ -593,7 +593,7 @@ async def system_of_ode_midpoint_euler(bodyValues: odeSysBodyType):
         result = {
             "iteration": i+1,
             "x": float(xi),
-            "y": [float(yi[j]) for j in range(len(y))],
+            "y": [str(yi[j]) for j in range(len(y))],
         }
         results.append(result)
         x = xi
@@ -625,9 +625,9 @@ async def rk_ralston(bodyValues: eulerBodyType):
         result = {
             "iteration": i+1,
             "x": float(x),
-            "y": float(y),
-            "k1": float(k1),
-            "k2": float(k2),
+            "y": str(y),
+            "k1": str(k1),
+            "k2": str(k2),
         }
         results.append(result)
     return results
@@ -657,7 +657,7 @@ async def system_of_ode_rk_ralston(bodyValues: odeSysBodyType):
         result = {
             "iteration": i+1,
             "x": float(xi),
-            "y": [float(yi[j]) for j in range(len(y))],
+            "y": [str(yi[j]) for j in range(len(y))],
         }
         results.append(result)
         x = xi
@@ -689,10 +689,10 @@ async def rk_3(bodyValues: eulerBodyType):
         result = {
             "iteration": i+1,
             "x": float(x),
-            "y": float(y),
-            "k1": float(k1),
-            "k2": float(k2),
-            "k3": float(k3),
+            "y": str(y),
+            "k1": str(k1),
+            "k2": str(k2),
+            "k3": str(k3),
         }
         results.append(result)
     return results
@@ -723,7 +723,7 @@ async def system_of_ode_rk_3(bodyValues: odeSysBodyType):
         result = {
             "iteration": i+1,
             "x": float(xi),
-            "y": [float(yi[j]) for j in range(len(y))],
+            "y": [str(yi[j]) for j in range(len(y))],
         }
         results.append(result)
         x = xi
@@ -761,13 +761,15 @@ async def rk_4(bodyValues: eulerBodyType):
         result = {
             "iteration": i+1,
             "x": float(x),
-            "y": float(y),
-            "k1": float(k1),
-            "k2": float(k2),
-            "k3": float(k3),
-            "k4": float(k4),
+            "y": str(y),
+            "k1": str(k1),
+            "k2": str(k2),
+            "k3": str(k3),
+            "k4": str(k4),
         }
+        # print("y: ", y)
         results.append(result)
+    # print(results)
     return results
 
 
@@ -798,7 +800,7 @@ async def system_of_ode_rk_4(bodyValues: odeSysBodyType):
         result = {
             "iteration": i+1,
             "x": float(x),
-            "y": [float(yi) for yi in y]
+            "y": [str(yi) for yi in y]
         }
         results.append(result)
     return results
@@ -830,13 +832,13 @@ async def rk5_butchers_method(bodyValues: eulerBodyType):
         result = {
             "iteration": i+1,
             "x": float(x),
-            "y": float(y),
-            "k1": float(k1),
-            "k2": float(k2),
-            "k3": float(k3),
-            "k4": float(k4),
-            "k5": float(k5),
-            "k6": float(k6),
+            "y": str(y),
+            "k1": str(k1),
+            "k2": str(k2),
+            "k3": str(k3),
+            "k4": str(k4),
+            "k5": str(k5),
+            "k6": str(k6),
         }
         results.append(result)
     return results
@@ -870,7 +872,7 @@ async def system_of_ode_rk5_butchers_method(bodyValues: odeSysBodyType):
         result = {
             "iteration": i+1,
             "x": float(xi),
-            "y": [float(yi[j]) for j in range(len(y))],
+            "y": [str(yi[j]) for j in range(len(y))],
         }
         results.append(result)
         x = xi
@@ -946,12 +948,65 @@ async def solve_differential_equation(bodyValues: bvpBodyType):
 
     results = {
         "disc_eqn": str(disc_eqn),
-        "matrix": [[float(value) for value in row] for row in matrix.tolist()],
-        "constant_matrix": [[float(value) for value in row] for row in constant_matrix.tolist()],
-        "solution": [[float(value) for value in row] for row in sol.tolist()]
+        "matrix": [[str(value) for value in row] for row in matrix.tolist()],
+        "constant_matrix": [[str(value) for value in row] for row in constant_matrix.tolist()],
+        "solution": [[str(value) for value in row] for row in sol.tolist()]
     }
     
     return results
+
+
+
+class ellipticBodyType(BaseModel):
+    nx: int
+    ny: int
+    l: float
+    r: float
+    t: float
+    b: float
+    max_iterations: int
+    max_error: float
+    over_relaxation: float
+
+@app.post("/pde/finite-difference-elliptic")
+async def partial_differential_equation_liebmann(bodyValues: ellipticBodyType):
+    nx = bodyValues.nx
+    ny = bodyValues.ny
+    left = bodyValues.l
+    right = bodyValues.r
+    top = bodyValues.t
+    bottom = bodyValues.b
+    max_iterations = bodyValues.max_iterations
+    abs_max_error = bodyValues.max_error
+    over_relaxation = bodyValues.over_relaxation
+
+    matrix = [[top] * (ny+2)]
+    for i in range(1, nx+1):
+        row = [left] + [0] * ny + [right]
+        matrix.append(row)
+    matrix.append([bottom] * (ny+2))
+
+    results = [{"itr": 0, "matrix": matrix}]
+
+    for iteration in range(max_iterations):
+        new_matrix = [row.copy() for row in matrix]
+        for i in range(1, nx+1):
+            for j in range(1, ny+1):
+                new_value = (1 - over_relaxation) * new_matrix[i][j] + over_relaxation * (new_matrix[i-1][j] + new_matrix[i+1][j] + new_matrix[i][j-1] + new_matrix[i][j+1]) / 4
+                new_matrix[i][j] = new_value
+        
+        max_error = max(abs((new_matrix[i][j] - matrix[i][j])/matrix[i][j]) * 100 if matrix[i][j] != 0 else 100 for i in range(1, nx+1) for j in range(1, ny+1))
+        matrix = new_matrix
+        results.append({"itr": iteration+1, "matrix": [[float(value) for value in row] for row in matrix], "abre": max_error})
+        if max_error < abs_max_error:
+            break
+    
+    return results
+
+
+
+
+    
 
 
 
